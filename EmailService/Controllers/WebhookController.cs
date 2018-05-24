@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using EmailService.Contracts;
 using EmailService.Service;
 using Microsoft.AspNetCore.Mvc;
@@ -16,15 +17,17 @@ namespace EmailService.Controllers
             _emailService = emailService;
         }
         
-         // POST api/webhook
         [HttpPost]
         public IActionResult Post([FromBody] Email email)
         {
-             var status = _emailService.SendEmail(email);
-             if(status == "Success!")
-              return  Created("", email);
-             else
-               return BadRequest($"Failed sending email");            
-        }
+            // Below solution is simple and short solution but to have a complete 
+            //solution ,We can store the Email in a queue and then return acknowledgement
+            // We also need to have a queue processor that dequeue messages(emails) 
+            //and sends email and then it sends the coresponding http response back to the client
+
+            Task.Factory.StartNew(() => _emailService.SendEmail(email));
+            return Accepted();      
+        }       
+
     }
 }
